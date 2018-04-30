@@ -2,38 +2,19 @@ import csv
 import librarian as lib
 import log
 import account as ac
+from screen import Screen
+from collections import OrderedDict
+from collections import namedtuple
 
 
-def intro():
-    """ Gives user possibility to either log in or to create account"""
 
-    choice = 0
-    while choice != '3':
-        print("""
-        LOGIN______________________________
-        Welcome to the LIBRARY 6000 system!
-        1 To log in
-        2 To create a new account
-        3 To exit
+def log_in_and_go_to_main_page():
+    login, password = log.log_in()
+    main_page(login, password)
 
-        For librarian acces enter 'admin'
-            """
-            )
-        choice = input('>  ')
-
-        if choice == '1':
-            login, password = log.log_in()
-            main_page(login, password)
-        elif choice == '2':
-            log.create_account()
-        elif choice == '3':
-            return
-        elif choice == 'admin':
-            librarian()
-        else:
-            print("Wrong comment, try again")
-
-    print("Closing the system, goodbye")
+def exit():
+    print("Quitting the library\n Goodbye!")
+    # add exit
 
 
 def main_page(login, password):
@@ -68,9 +49,21 @@ def main_page(login, password):
             print("Wrong command, try again")
 
 
-def librarian():
+def librarian(main_page):
     """Admins domain with access to admin funcitons """
+    admin_header ="""
+        ADMIN___________________________
+        This is librairian account. What do you want to do?
+            """"
 
+    admin_choices=(
+        "Return a book",
+        "Add a book",lib.adding_books
+        "Delete a book",lib.deleting_books
+        "Check person database",lib.person_check
+        "Delete users account",
+        "To quit"
+                )
     choice = 0
     while choice != '6':
         print("""\n
@@ -133,5 +126,37 @@ def librarian():
             print('Goodbye!')
         else:
             print("Wrong command, try again")
+######################################################################
+# intro()
+header = """\t\tLOGIN______________________________
+        Welcome to the LIBRARY 6000 system!"""
 
-intro()
+choice =  namedtuple('Choice',['desc','func'])
+
+choices = (
+        choice('To log in', log.log_in_and_go_to_main_page),
+        choice('To create a new account', log.create_account),
+        choice('To admin funcions', librarian),
+        choice('To exit', log.exit)
+        )
+
+intro = Screen(header, choices)
+
+intro.activate()
+
+#######################################################
+
+main_header = """        ACCOUNT_________________
+        Welcome to your page
+        What do you want to do?
+        """
+main_choices = (
+        ('Search for a book', ac.search_for_books),
+        ('Check your books', ac.check_my_books), # LOGIN?
+        ('Rent a book',ac.rent_book), # LOGIN?
+        ('Change your account data',ac.change_account_details),
+        ('Log out',exit)
+        )
+
+main_page = Screen(main_header, main_choices, login, password)
+main_page.activate()

@@ -1,7 +1,36 @@
 import csv
+from screen import Screen
 from datetime import datetime
+import account as ac
 
-def create_account():
+
+
+def log_in_and_go_to_main_page(intro):
+    login, password = log_in()
+
+    main_header = """        ACCOUNT_________________
+            Welcome to your page
+            What do you want to do?
+            """
+    main_choices = (
+            ('Search for a book', ac.search_for_books),
+            ('Check your books', ac.check_my_books), # LOGIN?
+            ('Rent a book', ac.rent_book), # LOGIN?
+            ('Change your account data', ac.change_account_details), # LOGIN, PASSWORD
+            ('Log out', exit)
+            )
+
+    main_page= Screen(main_header, main_choices, login, password)
+    main_page.activate()
+
+
+def exit(intro):
+    """ Exit the screen to the previous one"""
+    print("Quitting the library\n Goodbye!")
+    return
+
+
+def create_account(intro):
     """Adds person data into 'base.csv' """
 
     with open('data.csv', 'a', newline='') as data:
@@ -57,8 +86,11 @@ def create_account():
             data_writer.writerow(data)
 
 
-def login_taken(login):
+def login_taken(main_page):
     """ Checks if the login in the base is already taken"""
+
+    login = main_page.login
+
     taken = 1
     while taken != 0:
         with open('data.csv', 'r') as data_file:
@@ -96,8 +128,9 @@ def log_in():
     return login, password
 
 
-def check_password(login, password):
+def check_password(login,password):
     """Checks if the password and login are binded together"""
+
 
     with open('data.csv', 'r') as data_file:
         data_list = csv.reader(data_file)

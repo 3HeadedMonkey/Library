@@ -1,31 +1,33 @@
 import csv
 import os
 import datetime
+import log
 from datetime import timedelta
 from datetime import date
+from screen import Screen
 
-def search_for_books(): # Add information to the printout if the book is rented
+
+def search_for_books(main_page): # Add information to the printout if the book is rented
     """Ask for the type of search and then lists the books based of the criteria"""
 
     type_of_search = 0
-    while type_of_search != 'X':
-        print("""
-            Do you want to search for books by the first letter of the title [A]
-            or by the type [T]?
-            To exit enter 'X'
+
+    header = """
+    Do you want to search for books by the first letter of the title [A]
+    or by the type [T]?
+    To exit enter 'X'
             """
-            )
-        type_of_search = input(">  ")
-        if type_of_search == 'A':
-            search_by_letter()
-        elif type_of_search == 'T':
-            search_by_type()
-        else:
-            print("Command unknown, write 'A' or 'T', to exit type 'X'")
-    return
+    search_choices= (
+        ("To search by letter", search_by_letter),
+        ("To search by type", search_by_type),
+        ("To exit",log.exit)
+                    )
 
+    book_search = Screen(header,search_choices,
+                        main_page.login, main_page.password)
+    book_search.activate()
 
-def search_by_letter():
+def search_by_letter(book_search):
     """ Lists books that are starting with the entered letter"""
     print("What is the first letter of the searched title? Use uppercase")
     letter = input(">  ")
@@ -48,18 +50,18 @@ def search_by_letter():
     return
 
 
-def search_by_type():
+def search_by_type(book_search):
     """Lists all books from the set type"""
 
     book_type_translator = {
         '1':'fiction',
         '2':'crime',
         '3':'adventure'
-    }
+        }
 
     print("What type of book are you looking for? Enter a number")
     print(
-    "\n".join(f"{num}.{genre}" for num,genre in book_type_translator.items()))
+    "\n".join(f"{num}.{genre}" for num, genre in book_type_translator.items()))
 
     book_type_number = 0
 
@@ -103,8 +105,11 @@ def if_rented(ID):
                         )
 
 
-def check_my_books(login):
+def check_my_books(main_page):
     """checks the books rented by the person in rented.csv base"""
+
+    login = main_page.login # how to do it?
+
 
     # rented.csv = [ID, rental_date, return_date, login]
     with open('rented.csv', 'r') as rented_base:
@@ -133,7 +138,7 @@ def check_my_books(login):
     input('> ')
 
 
-def rent_book(login):
+def rent_book(main_page):
     """changes books data to 'rented' its 'return date' and by whom"""
 
     print("Which book do you wish to rent? Enter its code")
@@ -152,7 +157,7 @@ def rent_book(login):
                     print('Books is unavailable')
                 else:
                     rented_book_data = line
-                    change_books_status(login,book_code,rented_book_data)
+                    change_books_status(main_page,cbook_code, rented_book_data)
                     print("Congratulations, you've rented a book!")
                     break
 
@@ -164,8 +169,10 @@ def rent_book(login):
     os.rename('rented_temp.csv','rented.csv')
 
 
-def change_books_status(login, book_code,rented_book_data):
+def change_books_status(main_page, book_code, rented_book_data):
     """ creates rented_temp.csv file with changed book status"""
+
+    login = main_page.login
 
     # modifying book_data:
     rental_date = datetime.date.today()
@@ -193,43 +200,48 @@ def change_books_status(login, book_code,rented_book_data):
                 else:
                     rented_writer.writerow(line)
 
+def change_name(change_account):
+    """ Delegates change_name() to change_data() with 'name' """
+    change_data(change_account, changed_data='name')
 
-def change_account_details(login, password):
+
+def change_surname(change_account):
+    """ Delegates change_name() to change_data() with 'surname' """
+    change_data(change_account, changed_data='surname')
+
+
+def change_password(change_account):
+    """ Delegates change_name() to change_data() with 'password' """
+    change_data(change_account, changed_data='password')
+
+
+def change_account_details(main_page):
     """ Depending on the imput changes account details in 'data.csv'"""
 
-    change = '0'
-    while change is not '4':
-        print("""
-        What do you want to change?
-        1. Name
-        2. Surname
-        3. Password
-        4. To Exit
-        """
-        )
-        change = input('>  ')
+    header = "What do you want to change?"
+    change_choices =(
+            ('Name',change_name),
+            ('Surname',change_surname),
+            ('Password',change_password),
+            ('To exit',log.exit)
+            )
 
-        if change == '1':
-            change_data(login,password,'name')
-        elif change == '2':
-            change_data(login,password,'surname')
-        elif change == '3':
-            change_data(login,password,'password')
-        elif change =='4':
-            return
-        else:
-            print("Error, wrong value")
+    change_account = Screen( header, change_choices, main_page.login,
+                            main_page.password)
 
+    change_account.activate()
 
-def change_data(login,password,changed_data):
+def change_data(change_account, changed_data):
+
+    login = change_account.login
+    password = change_account.password
 
     changed_value = {
-    'name':0,
-    'surname':1,
-    'password':3
-    }
+                'name':0,
+                'surname':1,
+                'password':3
+                    }
 
-    #add an f string here
     print("What is your new",changed_data,"?")
     new_data = input('>  ')
     print("Enter your OLD password to accept the change")

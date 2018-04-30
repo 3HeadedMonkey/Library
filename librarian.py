@@ -25,6 +25,7 @@ def adding_books():
 
     type = 0
     stoper = 0
+    # This is plain stupid, redo, just check ofr key() or whatever
 
     # Creating new books ID (its type as the last one in the base)
     while stoper == 0:
@@ -38,17 +39,26 @@ def adding_books():
 
     book_type = book_type_translator[type]
 
+    code_letter = code_letter_generator(book_type)
+
+    new_code = code_generator(code_letter)
+
+
+def code_letter_generator(book_type):
+
     with open('rented.csv','r') as book_base:
         book_rented = csv.reader(book_base)
 
         for line in book_rented:
-            if line[0].startswith(book_type_translator_letter[type]):
+            if line[0].startswith(book_type):
                 code_letter = line[0]
 
-    code_number = int(code_letter[1:])
-    code_number +=1
-    code_number = str(code_number)
-    new_code = ''.join([code_letter[0],code_number])
+    return code_letter
+    # Add iterating from the back instead of rerwriting code_letter all over again
+
+
+def new_book_data(new_code, book_type):
+    """ Gathers book data form keyboard and adds the book to the base"""
 
     print("What is the books title?")
     title = input('>  ')
@@ -60,10 +70,25 @@ def adding_books():
     year = int(input('>  '))
 
     new_book = [title, author, year, new_code, book_type]
+    book_adder(new_book)
+
+
+def code_generator(code_letter):
+    """Returns a new code from the letter of the last book of the type"""
+
+    code_number = int(code_letter[1:])
+    code_number +=1
+    code_number = str(code_number)
+    new_code = ''.join([code_letter[0],code_number])
+    return new_code
+
+
+def book_adder(new_book):
+    """modifier of booth books.csv and rented.csv files"""
+
     # rented_table = [ID,rental_date,return_date,RETURNED,login]
     new_rented = [new_code,0,0,'TRUE',0]
 
-    # morifier of booth books.csv and rented.csv files
     with open('books.csv', 'a') as book_base:
         book_appender = csv.writer(book_base)
         book_appender.writerow(new_book)
@@ -215,6 +240,7 @@ def return_book(ID):
                 book_status.append(returned_date)
                 book_status.append("TRUE")
                 book_status.append("") # empty place after the login
+
         if pointer == 0:
             print('There is no book of this code in the database')
             return 1
@@ -228,7 +254,6 @@ def return_book(ID):
                 if row[0] == ID:
                     rented_writer.writerow(book_status)
                 else:
-                    print(row)
                     rented_writer.writerow(row)
 
 
@@ -241,7 +266,7 @@ def person_rented(login):
 
     """ returns a list of IDs of books borrowed by the user"""
 
-# rented.csv = [ID,rental_date,return_date,RETURNED,login]
+    # rented.csv = [ID,rental_date,return_date,RETURNED,login]
     with open('rented.csv','r') as rented_base_r:
         rented_reader = csv.DictReader(rented_base_r)
         ID_list = []
@@ -252,3 +277,19 @@ def person_rented(login):
 
 
         return ID_list
+
+
+def person_check(admin_choices):
+    person_search()
+    detailed_check()
+
+
+def detailed_check():
+    users_login = 'none'
+    while users_login != 'X':
+        print("\n\nTo check users data enter his login, to exit enter 'X'\n")
+        users_login = input('>  ')
+        if users_login == '':
+            pass
+        else:
+            person_details(login) #add cheker if the login exists?

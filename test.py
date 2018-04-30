@@ -1,14 +1,46 @@
-import csv
+import collections
+# from collections import OrderedDict
+import os
+from collections import OrderedDict
+from collections import namedtuple
+from screen import Screen
 
-with open('data.csv', 'r') as csv_file:
-    csv_reader = csv.DictReader(csv_file)
+# Choice = namedtuple('name','desc')
+# p = Choice('Dark', 'A very dark place')
 
-    with open('new_names.csv', 'w') as new_file:
-        fieldnames = ['name','surname','login','password','email',]
+choice =  namedtuple('choice',['desc','func'])
 
-        csv_writer = csv.DictWriter(new_file, fieldnames=fieldnames, delimiter='\t')
 
-        csv_writer.writeheader()
+header = """\t\tLOGIN______________________________
+        Welcome to the LIBRARY 6000 system!"""
 
-        for line in csv_reader:
-            csv_writer.writerow(line)
+def first():
+    print("Works")
+
+def create_account():
+    print("works2")
+
+def librarian():
+    print('works 3')
+
+def exit():
+    print('works 4')
+
+choices = (
+        choice('To log in', first),
+        choice('To create a new account', create_account),
+        choice('To admin funcions', librarian),
+        choice('To exit', exit)
+        )
+
+print(choices)
+print('_____________________')
+for i, row in enumerate(choices, 1):
+    print(i, row[0], row[1])
+
+intro = Screen(header, choices)
+intro.activate()
+
+# first()
+# pu = choice ('forst', first())
+# pu[1]()
