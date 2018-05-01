@@ -1,33 +1,40 @@
 import csv
-from screen import Screen
+import exit
 from datetime import datetime
+from collections import namedtuple
+
 import account as ac
-
-
+from screen import Screen
 
 def log_in_and_go_to_main_page(intro):
-    login, password = log_in()
+    """Logs in the user and activates his main page"""
 
-    main_header = """        ACCOUNT_________________
+    login, password = log_in(intro)
+    main_page(login, password)
+
+
+def main_page(login, password):
+    """Loads main page of the user"""
+
+    main_header = """
+            ACCOUNT_________________
             Welcome to your page
             What do you want to do?
             """
+
+    choice =  namedtuple('Choice',['desc','func'])
+
     main_choices = (
-            ('Search for a book', ac.search_for_books),
-            ('Check your books', ac.check_my_books), # LOGIN?
-            ('Rent a book', ac.rent_book), # LOGIN?
-            ('Change your account data', ac.change_account_details), # LOGIN, PASSWORD
-            ('Log out', exit)
+            choice('Search for a book', ac.search_for_books),
+            choice('Check your books', ac.check_my_books), # LOGIN?
+            choice('Rent a book',ac.rent_book), # LOGIN?
+            choice('Change your account data',ac.change_account_details),
+            choice('Log out',exit.exit_to_intro)
             )
 
-    main_page= Screen(main_header, main_choices, login, password)
-    main_page.activate()
-
-
-def exit(intro):
-    """ Exit the screen to the previous one"""
-    print("Quitting the library\n Goodbye!")
-    return
+    main_page = Screen(main_header, main_choices, login, password)
+    while True:
+        main_page.activate()
 
 
 def create_account(intro):
@@ -36,54 +43,38 @@ def create_account(intro):
     with open('data.csv', 'a', newline='') as data:
         data_writer = csv.writer(data)
 
-        login_test = 1
-        while login_test == 1:
-            print("""
-            Welcome to the account creator!
-            To exit at any time type 'X'"
-            "What is your new login?
-            """
-            )
-            login = input('>  ')
-            login_test = login_taken(login)
-            if login == 'X':
-                return
+        print("""
+        Welcome to the account creator!
+        To exit at any time type 'X'"
+        "What is your new login?
+        """
+        )
+        login = input('>  ')
+        if login == 'X':
+            return
 
-            if login_test == 1:
-                print('Unexpected problem, closing the creator!')
-                return 1
+        login_test = login_taken(login)
+        data = data_collector(login)
+        data_writer.writerow(data)
 
-            print("What is your name?")
-            name = input('>  ')
-            if name == 'X':
-                return
 
-            print("What is your surname?")
-            surname = input('>  ')
-            if surname == 'X':
-                return
+def data_collector(login):
+    """ Returns a table of new user data from the keyboard"""
 
-            print("what is your email?")
-            email = input('>  ')
-            if email == 'X':
-                return
+    collecting_data = ['name', 'surname', 'email', 'password']
+    temp_data = []
 
-            #add a function that cheks if email is not taken
-            print("What is you password?")
-            password = input('> ')
-            if password == 'X':
-                return
+    for info in data:
+        print('What is your ', info,'?')
+        collected_data = input('>  ')
+        if collected_data == 'X':
+            return
+        temp_data.append(collected_data)
 
-            print("Congratulations,",name," you've created a new account!")
+    name, surname, email, paassword = temp_data
+    data = [name, surname, login, password, email]
 
-            data = []
-            data.append(name)
-            data.append(surname)
-            data.append(login)
-            data.append(password)
-            data.append(email)
-
-            data_writer.writerow(data)
+    return data
 
 
 def login_taken(main_page):
@@ -107,7 +98,7 @@ def login_taken(main_page):
     return 0
 
 
-def log_in():
+def log_in(intro):
     """ After verification with 'data.csv' base returns users login"""
 
     print("Hello User! Enter your login OR enter '1' to create account")
@@ -117,7 +108,7 @@ def log_in():
         login = input('>  ')
 
         if login == '1':
-            create_account()
+            create_account(intro)
             print("Enter your login again")
             login = input('>  ')
 

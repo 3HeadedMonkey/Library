@@ -2,25 +2,25 @@ import csv
 import os
 import datetime
 import log
+import exit
 from datetime import timedelta
 from datetime import date
 from screen import Screen
 
 
 def search_for_books(main_page): # Add information to the printout if the book is rented
-    """Ask for the type of search and then lists the books based of the criteria"""
+    """Ask for the type of search and then lists books based of the criteria"""
 
     type_of_search = 0
 
     header = """
-    Do you want to search for books by the first letter of the title [A]
-    or by the type [T]?
-    To exit enter 'X'
+    Do you want to search for books by the first letter of the title
+    or by the type?
             """
     search_choices= (
         ("To search by letter", search_by_letter),
         ("To search by type", search_by_type),
-        ("To exit",log.exit)
+        ("To exit",exit.exit_to_main)
                     )
 
     book_search = Screen(header,search_choices,
@@ -50,6 +50,23 @@ def search_by_letter(book_search):
     return
 
 
+def book_printer(book_type):
+    """Prints books of the type"""
+
+    # books.csv = [title,author,year,ID,book_type]
+    with open('books.csv', 'r') as book_base:
+        book_list = csv.reader(book_base)
+        next(book_list)
+
+        for book_data in book_list:
+            if book_data[-1] == book_type:
+                print(book_data)
+                ID = book_data[-2]
+                if_rented(ID)
+        print('\n')
+        return
+
+
 def search_by_type(book_search):
     """Lists all books from the set type"""
 
@@ -65,25 +82,13 @@ def search_by_type(book_search):
 
     book_type_number = 0
 
-    while book_type_number != 'X':
+    while True:
         book_type_number = input('>  ')
+
         if book_type_number in book_type_translator:
             book_type = book_type_translator[book_type_number]
-            # books.csv = [title,author,year,ID,book_type]
-            with open('books.csv', 'r') as book_base:
-                book_list = csv.reader(book_base)
-                next(book_list)
-
-                for book_data in book_list:
-                    if book_data[-1] == book_type:
-                        print(book_data)
-                        ID = book_data[-2]
-                        if_rented(ID)
-
-                print('\n')
-                return
-
-        elif book_type_number is 'X':
+            book_printer(book_type)
+        elif book_type_number == 'X':
             return
         else:
             print("Book type invalid, try again or [X] to exit")
@@ -108,8 +113,7 @@ def if_rented(ID):
 def check_my_books(main_page):
     """checks the books rented by the person in rented.csv base"""
 
-    login = main_page.login # how to do it?
-
+    login = main_page.login
 
     # rented.csv = [ID, rental_date, return_date, login]
     with open('rented.csv', 'r') as rented_base:
@@ -124,62 +128,87 @@ def check_my_books(main_page):
 
         print("Your rented books are:")
 
-        # books.csv = [title, author, year, ID, book_type]
-        with open('books.csv', 'r') as book_base:
-            book_reader = csv.reader(book_base)
-            next(book_reader)
-            for line in book_reader:
-                for box in books_table:
-                    if line[3] == box[0]:
-                        print(line)
-                        print("\tRented on",box[1],"\nTo be returned on",box[2])
+        books_table_reader(books_table)
 
 
-    input('> ')
+def books_table_reader(books_table):
+    """Reads user books from books_table"""
+
+    # books.csv = [title, author, year, ID, book_type]
+    with open('books.csv', 'r') as book_base:
+        book_reader = csv.reader(book_base)
+        next(book_reader)
+        for line in book_reader:
+            for box in books_table:
+                if line[3] == box[0]:
+                    print(line)
+                    print("\tRented on",box[1],"\nTo be returned on",box[2])
 
 
 def rent_book(main_page):
-    """changes books data to 'rented' its 'return date' and by whom"""
+    """changes books data to 'rented' in rented.csv"""
 
     print("Which book do you wish to rent? Enter its code")
     book_code = input('>  ')
 
-    with open('rented.csv', 'r') as rented_base:
-        rented_reader = csv.reader(rented_base)
-        next(rented_reader)
-
-        pointer = 0
-        # Verify if the book is available
-        for line in rented_reader:
-            if line[0] == book_code:
-                pointer = 1
-                if line[-2] == 'FALSE':
-                    print('Books is unavailable')
-                else:
-                    rented_book_data = line
-                    change_books_status(main_page,cbook_code, rented_book_data)
-                    print("Congratulations, you've rented a book!")
-                    break
-
-        if pointer == 0:
-            print("There is no book with this code")
-            return 0
+    check_code_and_rent(main_page, book_code)
 
     os.remove('rented.csv')
     os.rename('rented_temp.csv','rented.csv')
 
 
-def change_books_status(main_page, book_code, rented_book_data):
-    """ creates rented_temp.csv file with changed book status"""
+def check_code_and_rent(main_page, book_code):
+    """ Check if book code exists in base and  rents it"""
+
+    with open('rented.csv', 'r') as rented_base:
+        rented_reader = csv.reader(rented_base)
+        next(rented_reader)
+
+        rented_book_data = []
+        check_if_available(main_page, rented_reader, book_code,
+                            rented_book_data)
+
+        if rented_book_data == []:
+            print("There is no book with this code")
+            return 1
+
+
+def check_if_available(main_page,rented_reader, book_code,
+                        rented_book_data):
+    """Checks if book is available and if yes, rents it """
+
+    for line in rented_reader:
+        if line[0] == book_code:
+            if line[-2] == 'FALSE':
+                print('Books is unavailable')
+                return
+            else:
+                rented_book_data = line
+                change_books_status(main_page,book_code,
+                                    rented_book_data)
+                print("Congratulations, you've rented a book!")
+                return
+
+
+def date_setter():
+    """ Sets rental and return data for a book"""
+    rental_date = datetime.date.today()
+    return_date = rental_date + timedelta(days= 40)
+
+    rental_dates = []
+    rental_dates.append(date.strftime(rental_date,'%d.%m.%Y'))
+    return_dates.append(date.strftime(return_date,'%d.%m.%Y'))
+
+    return rental_dates
+
+
+def rented_book_new_data(main_page, book_code):
+    """Sets a table of rented book data"""
 
     login = main_page.login
 
     # modifying book_data:
-    rental_date = datetime.date.today()
-    return_date = rental_date + timedelta(days= 40)
-
-    rental_date = date.strftime(rental_date,'%d.%m.%Y')
-    return_date = date.strftime(return_date,'%d.%m.%Y')
+    rental_date, return_date = date_setter()
 
     new_rented_data = [book_code,
                     rental_date,
@@ -187,6 +216,14 @@ def change_books_status(main_page, book_code, rented_book_data):
                     'FALSE',
                     login
                     ]
+
+    return new_rented_data
+
+
+def change_books_status(main_page, book_code, rented_book_data):
+    """Creates rented_temp.csv file with changed book status"""
+
+    new_rented_data = rented_book_new_data(main_page, book_code)
 
     with open('rented.csv', 'r') as rented_base_r:
         rented_reader = csv.reader(rented_base_r)
@@ -199,6 +236,7 @@ def change_books_status(main_page, book_code, rented_book_data):
                     rented_writer.writerow(new_rented_data)
                 else:
                     rented_writer.writerow(line)
+
 
 def change_name(change_account):
     """ Delegates change_name() to change_data() with 'name' """
@@ -231,54 +269,77 @@ def change_account_details(main_page):
 
     change_account.activate()
 
+
 def change_data(change_account, changed_data):
 
     login = change_account.login
     password = change_account.password
 
-    changed_value = {
-                'name':0,
-                'surname':1,
-                'password':3
-                    }
-
     print("What is your new",changed_data,"?")
     new_data = input('>  ')
-    print("Enter your OLD password to accept the change")
+    print("Enter your current password to accept the change")
     user_password = input('>  ')
 
-    #Out data base will be outdayed after the change
-
     if user_password == password:
-        with open('data.csv', 'r') as data_base_r:
-            data_reader = csv.reader(data_base_r)
-
-            # searching for a line with inputed login
-            data_line = []
-
-            with open("data.csv", 'r') as login_search:
-                login_reader = csv.reader(login_search)
-                next(login_reader)
-
-                for lines in login_reader:
-                    if lines[2] == login:
-                        data_line = lines
-                        break
-
-            # change the data
-            data_line[changed_value[changed_data]] = new_data
-
-            with open("data_temp.csv", 'w', newline='') as data_base_w:
-                data_writer = csv.writer(data_base_w)
-
-                for line in data_reader:
-                    if line[2] == login:
-                        data_writer.writerow(data_line)
-                    else:
-                        data_writer.writerow(line)
-
-        os.remove('data.csv')
-        os.rename('data_temp.csv','data.csv')
-
+        change_data_writer(login, changed_data, new_data,)
     else:
         print("Wrong password")
+        return
+
+
+def data_line_code_generator(changed_data):
+
+    changed_value = {
+                    'name':0,
+                    'surname':1,
+                    'password':3
+                    }
+
+    data_line_code = changed_value[changed_data]
+    return data_line_code
+
+
+def change_new_data_writer_from_file(login):
+    """Returns users data table from data.csv"""
+
+    with open('data.csv', 'r') as data_base_r:
+        data_reader = csv.reader(data_base_r)
+        # searching for a line with inputed login
+        data_line = []
+
+        with open("data.csv", 'r') as login_search:
+            login_reader = csv.reader(login_search)
+            next(login_reader)
+
+            for lines in login_reader:
+                if lines[2] == login:
+                    data_line = lines
+                    return data_line
+
+
+def change_data_writer(login, changed_data, new_data):
+
+    data_line_code = data_line_code_generator(changed_data)
+
+    data_line = change_new_data_writer_from_file(login)
+
+    # change the data
+    data_line[data_line_code] = new_data
+
+    change_new_data_writer_to_file(login, data_line)
+
+    os.remove('data.csv')
+    os.rename('data_temp.csv','data.csv')
+
+
+def change_data_writer_to_file(login, data_line):
+    """ Creates data_temp.csv copy of data.csv with changed data"""
+
+    with open("data_temp.csv", 'w', newline='') as data_base_w:
+        data_writer = csv.writer(data_base_w)
+
+        for line in data_reader:
+            if line[2] == login:
+                data_writer.writerow(data_line)
+            else:
+                data_writer.writerow(line)
