@@ -1,10 +1,13 @@
-import intro
 import sys
 import log
 
+
 def exit_to_intro(self):
+    import Library
     """ Returns to the intro screen """
-    intro.intro()
+    # intro.activate()
+
+    Library.main()
 
 def exit_to_main(self):
     """ Returns to main page along with login and password data"""

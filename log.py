@@ -1,8 +1,8 @@
 import csv
-import exit
 from datetime import datetime
 from collections import namedtuple
 
+import exit
 import account as ac
 from screen import Screen
 
@@ -47,8 +47,8 @@ def create_account(intro):
         Welcome to the account creator!
         To exit at any time type 'X'"
         "What is your new login?
-        """
-        )
+            """
+                )
         login = input('>  ')
         if login == 'X':
             return

@@ -1,17 +1,34 @@
-import csv
+# import csv
+import log, sys
+import exit
 import librarian as lib
-import log
-import sys
-import intro
-import account as ac
+
 from screen import Screen
 from collections import namedtuple
 
+def intro():
+    """Loads intro screen"""
+
+    header = """
+            LOGIN______________________________
+            Welcome to the LIBRARY 6000 system!"""
+
+    choice =  namedtuple('Choice',['desc','func'])
+
+    choices = (
+            choice('To log in',log.log_in_and_go_to_main_page),
+            choice('To create a new account', log.create_account),
+            choice('To admin funcions', lib.librarian),
+            choice('To exit', exit.exit)
+            )
+
+    intro = Screen(header, choices)
+    intro.activate()
 
 
-def exit(intro):
-    print("Quitting the library\nGoodbye!")
-    sys.exit()
+def main():
 
-while True:
-    intro.intro()
+    while True:
+        intro()
+
+main()

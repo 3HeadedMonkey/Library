@@ -4,14 +4,11 @@ import operator
 import datetime
 
 import log
-import exit as ex
+import exit
 
 from datetime import date
 from collections import namedtuple
 from screen import Screen
-
-
-
 
 
 def librarian(main_page):
