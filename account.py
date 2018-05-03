@@ -27,6 +27,7 @@ def search_for_books(main_page): # Add information to the printout if the book i
                         main_page.login, main_page.password)
     book_search.activate()
 
+
 def search_by_letter(book_search):
     """ Lists books that are starting with the entered letter"""
     print("What is the first letter of the searched title? Use uppercase")
